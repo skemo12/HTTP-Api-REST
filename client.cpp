@@ -24,7 +24,7 @@ using namespace std;
 #define ACCESS "/api/v1/tema/library/access"
 #define BOOKS "/api/v1/tema/library/books"
 #define LOGOUT "/api/v1/tema/auth/logout"
-#define NOVALUESTRING ""
+#define NIL ""
 #define CONTENT_LENGTH "Content-Length: "
 #define SETCOOKIE "Set-Cookie: "
 #define TOKEN "token"
@@ -60,6 +60,25 @@ uint32_t bad_result(string response)
     return 0;
 }
 
+bool checkConnected(string cookie)
+{
+    if(cookie == NIL)
+    {
+        cout << "You need to log in first!\n";
+        return false;
+    }
+    return true;
+}
+
+bool checkAuth(string token)
+{
+    if(token == NIL)
+    {
+        cout << "You need to enter the library first!\n";
+        return false;
+    }
+    return true;
+}
 int get_content_size(char *response)
 {
     int content_size = 0;
@@ -77,7 +96,7 @@ int get_content_size(char *response)
 
 string get_content_type(char *response)
 {
-    string content(NOVALUESTRING);
+    string content(NIL);
     string message(response);
     if (message.find(CONTENT_TYPE) != message.npos)
     {
@@ -97,7 +116,7 @@ string get_content(char *response)
         message = message.substr(message.find("\r\n\r\n") + 4);
         return message;
     }
-    return NOVALUESTRING;
+    return NIL;
 }
 
 string get_content_value(char *response, string valueInContent)
@@ -121,7 +140,7 @@ string get_content_value(char *response, string valueInContent)
         
         
     }
-    return NOVALUESTRING;
+    return NIL;
 }
 
 string get_cookie(char *response)
@@ -134,7 +153,7 @@ string get_cookie(char *response)
         cookie = cookie.substr(12, endpos - 12);
         return cookie;
     }
-    return NOVALUESTRING;
+    return NIL;
 }
 
 void print_content_message(char *response)
@@ -144,7 +163,7 @@ void print_content_message(char *response)
     string content = get_content(response);
     if (!json::accept(content))
     {
-        fprintf(stderr, "Not a valid JSON input!\n");
+        fprintf(stdout, "Not a valid JSON input!\n");
         return;
     }
     json array = json::parse(content);
@@ -157,9 +176,9 @@ int handle_response(char *response)
     if (bad_result(response_string))
     {
         string error = get_content_value(response, "error");
-        if (error != NOVALUESTRING)
+        if (error != NIL)
         {
-            fprintf(stderr, "%s\n", error.c_str());
+            fprintf(stdout, "%s\n", error.c_str());
             return 0;
         }
         
@@ -169,8 +188,14 @@ int handle_response(char *response)
     return 1;
 }
 
-void send_register()
+void send_register(string cookie)
 {
+    if (cookie != NIL)
+    {
+        cout << "You need to logout first!\n";
+        return;
+    }
+    
     char *message;
     char *response;
     string username, password;
@@ -203,8 +228,14 @@ void send_register()
 }
 
 // returns cookie
-string send_login()
+string send_login(string checkAlreadyLoginCookie)
 {
+    if (checkAlreadyLoginCookie != NIL)
+    {
+        cout << "You need to logout first!\n";
+        return checkAlreadyLoginCookie;
+    }
+    
     char *message;
     char *response;
     string username, password;
@@ -227,7 +258,7 @@ string send_login()
     {
         free(message);  
         free(response);
-        return NOVALUESTRING;
+        return NIL;
     }
 
     cout << "200 - OK - Bun venit!\n";
@@ -238,31 +269,32 @@ string send_login()
     return cookie;
 }
 
-string enter_library(string cookie)
+string enter_library(string cookie, string inputToken)
 {
-    char *message;
-    char *response;
-    if (cookie == NOVALUESTRING)
+    if (!checkConnected(cookie))
     {
-        fprintf(stderr, "You need to log in first!\n");
-        return NOVALUESTRING;
+        return NIL;
+    }
+    if (inputToken != NIL)
+    {
+        cout << "You already entered the library!\n";
+        return inputToken;
     }
     
+
+    char *message;
+    char *response;
     message = compute_get_request(SERVER, ACCESS, NULL, cookie.c_str(), 1, NULL, NULL);
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     
     response = receive_from_server(sockfd);
-   
-    
-    string response_string(response);
-
 
     if (!handle_response(response))
     {
         free(message);
         free(response);
-        return NOVALUESTRING;
+        return NIL;
     }
     
     string token = get_content_value(response, TOKEN);
@@ -273,17 +305,19 @@ string enter_library(string cookie)
     return token;
 }
 
-void get_books(string token)
+void get_books(string cookie, string token)
 {
-    // if(token == NOVALUESTRING)
-    // {
-    //     fprintf(stderr, "No authentification token\n");
-    //     return;
-    // }
+    if (!checkConnected(cookie))
+    {
+        return;
+    }
+    if (!checkAuth(token))
+    {
+        return;
+    }
     char *message;
     char *response;
     message = compute_get_request(SERVER, BOOKS, NULL, NULL, 1, token.c_str(), NULL);
-    // cout << message;
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     
@@ -323,8 +357,8 @@ json create_book()
 
     if (!isNumber(input))
     {
-        fprintf(stderr, "page_count must be a number! Try again!\n");
-        return NOVALUESTRING;
+        fprintf(stdout, "page_count must be a number! Try again!\n");
+        return NIL;
     }
     
     j["page_count"] = input;
@@ -332,24 +366,26 @@ json create_book()
     return j;
 }
 
-void add_book(string token)
+void add_book(string cookie, string token)
 {
-    if(token == NOVALUESTRING)
+    if (!checkConnected(cookie))
     {
-        fprintf(stderr, "You need to first enter the library!\n");
+        return;
+    }
+    if (!checkAuth(token))
+    {
         return;
     }
     char *message;
     char *response;
     json book = create_book();
-    if (book == NOVALUESTRING)
+    if (book == NIL)
     {
         return;
     }
     
     message =  compute_post_request(SERVER, BOOKS, JSON_PAYLOAD,
                             book.dump(4).c_str(), 0, NULL, 0, token.c_str());
-    // cout << message;
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     response = receive_from_server(sockfd);
@@ -369,18 +405,28 @@ void add_book(string token)
     free(response);
 }
 
-void get_book(string token)
+void get_book(string cookie, string token)
 {
-    // if(token == NOVALUESTRING)
-    // {
-    //     fprintf(stderr, "No authentification token\n");
-    //     return;
-    // }
+    if (!checkConnected(cookie))
+    {
+        return;
+    }
+    if (!checkAuth(token))
+    {
+        return;
+    }
+
     char *message;
     char *response;
     string bookId;
     cout << "id=";
     cin >> bookId;
+    if (!isNumber(bookId))
+    {
+        cout << "Id must be a number! Try again!\n";
+        return;
+    }
+    
     message = compute_get_request(SERVER, BOOKS, NULL, NULL, 1, token.c_str(), bookId.c_str());
     // cout << message;
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
@@ -392,6 +438,7 @@ void get_book(string token)
     {
         free(message);
         free(response);
+        cout << "Enter a valid ID!\n";
         return;
     }
     print_content_message(response);
@@ -400,18 +447,26 @@ void get_book(string token)
     free(response);
 }
 
-void delete_book(string token)
+void delete_book(string cookie, string token)
 {
-    // if(token == NOVALUESTRING)
-    // {
-    //     fprintf(stderr, "No authentification token\n");
-    //     return;
-    // }
+    if (!checkConnected(cookie))
+    {
+        return;
+    }
+    if (!checkAuth(token))
+    {
+        return;
+    }
     char *message;
     char *response;
     string bookId;
     cout << "id=";
     cin >> bookId;
+    if (!isNumber(bookId))
+    {
+        cout << "Id must be a number! Try again!\n";
+        return;
+    }
     message = compute_delete_request(SERVER, BOOKS, NULL, NULL, 1, token.c_str(), bookId.c_str());
     // cout << message;
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
@@ -421,6 +476,7 @@ void delete_book(string token)
     {    
         free(message);
         free(response);
+        cout << "Enter a valid ID!\n";
         return;
     }
     print_content_message(response);
@@ -432,11 +488,11 @@ void delete_book(string token)
 
 void logout(string cookie)
 {
-    if (cookie == NOVALUESTRING)
+    if (!checkConnected(cookie))
     {
-        fprintf(stderr, "Not logged in\n");
         return;
     }
+
     char *message;
     char *response;
     message = compute_get_request(SERVER, LOGOUT, NULL, cookie.c_str(), 1, NULL, NULL);
@@ -450,7 +506,7 @@ void logout(string cookie)
         free(response);
         return;
     }
-    
+    cout << "OK - 200 - Logout terminat!\n";
     free(message);
     free(response);
 }
@@ -473,8 +529,8 @@ int main(int argc, char *argv[])
 {
 
     string command;
-    string cookie(NOVALUESTRING);
-    string token(NOVALUESTRING);
+    string cookie(NIL);
+    string token(NIL);
 
     while (1)
     {   
@@ -486,33 +542,33 @@ int main(int argc, char *argv[])
         switch (get_value(command))
         {
             case eRegister:
-                send_register();
+                send_register(cookie);
                 break;
             case eLogin:
-                cookie = send_login();
+                cookie = send_login(cookie);
                 break;
             case eEnterLibrary:
-                token = enter_library(cookie);
+                token = enter_library(cookie, token);
                 break;
             case eGetBooks:
-                get_books(token);
+                get_books(cookie, token);
                 break;
             case eGetBook:
-                get_book(token);
+                get_book(cookie, token);
                 break;
             case eAddBook:
-                add_book(token);
+                add_book(cookie, token);
                 break;
             case eDeleteBook:
-                delete_book(token);
+                delete_book(cookie, token);
                 break;
             case eLogout:
                 logout(cookie);
-                cookie = NOVALUESTRING;
-                token = NOVALUESTRING;
+                cookie = NIL;
+                token = NIL;
                 break;
             case eInvalidInput:
-                fprintf(stderr, "Not a valid input\n");
+                cout << "Not a valid input\n";
                 break;   
             default:
                 break;

@@ -8,7 +8,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat May 14 21:28:30 2022
+# Make data base, printed on Sun May 15 17:44:41 2022
 
 # Variables
 
@@ -17,7 +17,7 @@ make: *** No rule to make target 'all'.  Stop.
 # automatic
 ?F = $(notdir $?)
 # environment
-WSLENV = VSCODE_WSL_EXT_LOCATION/up
+WSLENV = ELECTRON_RUN_AS_NODE/w:
 # default
 .SHELLFLAGS := -c
 # environment
@@ -35,7 +35,7 @@ SHELL = /bin/sh
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en","availableLanguages":{}}
 # environment
-_ = /home/skemo/.vscode-server/bin/da15b6fd3ef856477bf6f4fb29ba1b7af717770d/node
+_ = /mnt/c/Users/sKemo/AppData/Local/Programs/Microsoft VS Code/bin/code
 # makefile (from 'Makefile', line 2)
 CFLAGS = -I.
 # environment
@@ -55,7 +55,7 @@ VSCODE_CWD = /mnt/c/Users/sKemo/AppData/Local/Programs/Microsoft VS Code
 # default
 MAKE_HOST := x86_64-pc-linux-gnu
 # environment
-PATH = /home/skemo/.vscode-server/bin/da15b6fd3ef856477bf6f4fb29ba1b7af717770d/bin/remote-cli:/home/skemo/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/d/Programe/VMware/bin/:/mnt/c/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA NvDLISR:/mnt/d/Program Files/MatLab/runtime/win64:/mnt/d/Program Files/MatLab/bin:/mnt/d/Program Files/MatLab/polyspace/bin:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/Scripts:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/python.exe:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/Scripts/:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/:/mnt/c/Users/sKemo/AppData/Local/Microsoft/WindowsApps:/mnt/d/Programe/IntelliJ IDEA Community Edition 2021.2.2/bin:/mnt/c/Program Files/Java/jdk-17/bin:/mnt/c/Users/sKemo/AppData/Local/GitHubDesktop/bin:/mnt/d/Programe/MiKTex/miktex/bin/x64/:/mnt/c/Users/sKemo/AppData/Local/atom/bin:/mnt/c/Users/sKemo/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/d/Programe/CLion 2021.3.2/bin:/mnt/d/Programe/Racket:/snap/bin:/usr/lib/jvm/java-17-oracle/bin:/usr/lib/jvm/java-17-oracle/db/bin
+PATH = /home/skemo/.vscode-server/bin/da15b6fd3ef856477bf6f4fb29ba1b7af717770d/bin/remote-cli:/home/skemo/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/WindowsApps/CanonicalGroupLimited.Ubuntu18.04onWindows_1804.2020.827.0_x64__79rhkp1fndgsc:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/d/Programe/VMware/bin/:/mnt/c/Program Files (x86)/Common Files/Intel/Shared Libraries/redist/intel64/compiler:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA NvDLISR:/mnt/d/Program Files/MatLab/runtime/win64:/mnt/d/Program Files/MatLab/bin:/mnt/d/Program Files/MatLab/polyspace/bin:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/Scripts:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/python.exe:/mnt/c/Program Files/Git/cmd:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/Scripts/:/mnt/c/Users/sKemo/AppData/Local/Programs/Python/Python310/:/mnt/c/Users/sKemo/AppData/Local/Microsoft/WindowsApps:/mnt/d/Programe/IntelliJ IDEA Community Edition 2021.2.2/bin:/mnt/c/Program Files/Java/jdk-17/bin:/mnt/c/Users/sKemo/AppData/Local/GitHubDesktop/bin:/mnt/d/Programe/MiKTex/miktex/bin/x64/:/mnt/c/Users/sKemo/AppData/Local/atom/bin:/mnt/c/Users/sKemo/AppData/Local/Programs/Microsoft VS Code/bin:/mnt/d/Programe/CLion 2021.3.2/bin:/mnt/d/Programe/Racket:/snap/bin:/usr/lib/jvm/java-17-oracle/bin:/usr/lib/jvm/java-17-oracle/db/bin
 # environment
 VSCODE_LOG_STACK = false
 # default
@@ -69,9 +69,9 @@ VSCODE_PIPE_LOGGING = true
 # environment
 PWD = /home/skemo/Facultate/Pcom/tema3
 # environment
-VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-a94e8bf7-01c9-4521-93a3-ddda187b1952.sock
+VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-34591e58-c7d0-4499-bdfe-df35a4aa29e3.sock
 # environment
-WSL_INTEROP = /run/WSL/13631_interop
+WSL_INTEROP = /run/WSL/11_interop
 # environment
 VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
 # environment
@@ -83,7 +83,7 @@ J2REDIR = /usr/lib/jvm/java-17-oracle
 # environment
 LOGNAME = skemo
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
 # environment
 J2SDKDIR = /usr/lib/jvm/java-17-oracle
 # environment
@@ -97,7 +97,7 @@ MAKE = $(MAKE_COMMAND)
 # default
 MAKECMDGOALS := all
 # environment
-SHLVL = 2
+SHLVL = 1
 # makefile (from 'Makefile', line 1)
 CC = g++
 # environment
@@ -109,7 +109,7 @@ USER = skemo
 # makefile
 .DEFAULT_GOAL := client
 # environment
-NAME = SKEMO
+NAME = Code
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
 # environment
@@ -167,9 +167,9 @@ WSL_DISTRO_NAME = Ubuntu-18.04
 
 # Directories
 
-# . (device 2064, inode 54046): 16 files, no impossibilities.
+# . (device 2064, inode 54046): 17 files, no impossibilities.
 
-# 16 files, no impossibilities in 1 directories.
+# 17 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -250,12 +250,12 @@ helpers.cpp:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 23 / storage = 203 B / avg = 8 B
-# current buf: size = 8162 B / used = 203 B / count = 23 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 24 / storage = 208 B / avg = 8 B
+# current buf: size = 8162 B / used = 208 B / count = 24 / avg = 8 B
 
-# strcache performance: lookups = 36 / hit rate = 36%
+# strcache performance: lookups = 37 / hit rate = 35%
 # hash-table stats:
-# Load=23/8192=0%, Rehash=0, Collisions=1/36=3%
-# Finished Make data base on Sat May 14 21:28:30 2022
+# Load=24/8192=0%, Rehash=0, Collisions=1/37=3%
+# Finished Make data base on Sun May 15 17:44:41 2022
 
  

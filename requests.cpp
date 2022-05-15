@@ -9,9 +9,13 @@
 #include "helpers.hpp"
 #include "requests.hpp"   
 
-char *compute_get_request(const char *host, const char *url, const char *query_params,
-                            const char *cookies, int cookies_count, const char *auth
-                            , const char *bookId)
+char *compute_get_request(const char *host, 
+                        const char *url, 
+                        const char *query_params,
+                        const char *cookies,
+                        int cookies_count,
+                        const char *auth,
+                        const char *bookId)
 {
     char *message = (char *) calloc(BUFLEN, sizeof(char));
     char *line = (char *) calloc(LINELEN, sizeof(char));
@@ -54,14 +58,17 @@ char *compute_get_request(const char *host, const char *url, const char *query_p
     return message;
 }
 
-char *compute_delete_request(const char *host, const char *url, const char *query_params,
-                            const char *cookies, int cookies_count, const char *auth
-                            , const char *bookId)
+char *compute_delete_request(const char *host,
+                            const char *url,
+                            const char *query_params,
+                            const char *cookies,
+                            int cookies_count,
+                            const char *auth,
+                            const char *bookId)
 {
     char *message = (char *) calloc(BUFLEN, sizeof(char));
     char *line = (char *) calloc(LINELEN, sizeof(char));
 
-    // Step 1: write the method name, URL, request params (if any) and protocol type
     if (query_params != NULL) {
         sprintf(line, "DELETE %s?%s HTTP/1.1", url, query_params);
     } else {

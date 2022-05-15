@@ -25,18 +25,4 @@ char *receive_from_server(int sockfd);
 // extracts and returns a JSON from a server response
 char *basic_extract_json_response(char *str);
 
-
-#define DIE(assertion, call_description)  \
-	do                                    \
-	{                                     \
-		if (assertion)                    \
-		{                                 \
-			fprintf(stdout, "(%s, %d): ", \
-					__FILE__, __LINE__);  \
-			perror(call_description);     \
-			exit(EXIT_FAILURE);           \
-		}                                 \
-	} while (0)
-
-
 #endif
