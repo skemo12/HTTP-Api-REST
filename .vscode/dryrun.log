@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/skemo/Facultate/Pcom/tema3'
+g++ -g -o client client.cpp requests.cpp helpers.cpp buffer.cpp -Wall
+make: Leaving directory '/home/skemo/Facultate/Pcom/tema3'
+ 
