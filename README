@@ -1,0 +1,55 @@
+-- Tema 3 PCom-- Paunoiu Darius Alexandru -- 322CD -- README
+
+
+    Solutia temei pleaca de la scheletul laboratorului 10, cel de HTTP, dar pe 
+care l-am modificat intr-o oarecare masura, schimband semnatura anumitor functii
+si aducand tot proiectu la C++ in loc de C. Pentru parsarea JSON, am folosit
+biblioteca nlohmann de json.
+    Tema este rezolvata integral, rezolvarea gasindu-se in fisierele:
+        - client.cpp
+        - helpers.cpp
+        - helpers.hpp
+        - request.cpp
+        - request.hpp
+        - buffer.cpp
+        - buffer.h
+    Am ales sa rezolv tema in C++ pentru a beneficia de structurile de date
+si de functionalele din acest limbaj. Codul este descris prin comentarii,
+dar voi detalia anumite aspecte mai importante si in acest README. Am modificat
+functiile din requests.cpp pentru a putea fi folosite complet in aceasta tema,
+adica am inclus tokenul de autentificare si id-ul acolo unde este necesar ca 
+parametrii.
+    Am defenit constanta NIL (""), ce este valoarea default pt un string gol in 
+rezolvarea aleasa.
+    Pentru asigurarea conexiunii cu server-ul am urmat protocolul clasic HTTP,
+adica deschid conexiunea, trimit request-ul, primesc raspunsul, si inchid 
+conexiunea.
+    Functia main asteapta input de la tastatura, dupa care apeleaza functia 
+corespunzatoare comenzii introduse.
+    Pentru a creea a uniformizare a input-ului de la tastatura, am creeat un
+enum inputs. Asadar, switch-ul din main va fi facut pe acest enum, iar pentru a 
+obtine o valoarea din enum in functie de un string citit de la tastatura se va 
+folosit functia get_input_value.
+    Am defenit functii ajutatoare pentru tema, cum ar fi cele de isNumber,
+checkPrintable pentru a putea urma in standard protocolul HTTP si cerintele
+temei. De asemenea, am defenit si functii pentru lucru-ul cu raspunsul HTTP,
+precum get_content sau get_content_value, ce sunt descrise in comentarii.
+    Functiile pentru fiecare comanda au nume sugestiv, si folosesc functiile 
+ajutatoare pentru rezolvarea task-urilor.
+    Pentru tratarea erorilor in care un utilizator nu este logat sau nu are
+acces la biblioteca am verificat daca exista exista un cookie de logare sau 
+un token de acces la nivel local, trimiterea unui mesaj in acest caz fiind
+inutila.
+    Erori tratate nespecificate in enunt:
+        - login-uri imbricate (un login urmat de un alt login nu va fi permis)
+        - register in interior unui login(nu poti creea un cont daca esti logat)
+        - autentificare librarie de multiple ori (nu ar trebui sa intrii de 2
+            ori in aceeasi librarie)
+        - orice alte eroare este tratata in modul default de program
+        verificandu-se codul HTTP intors, iar daca aceasta este un mesaj de 
+        eroare, este afisat content-ul mesajului de eroare.
+    Toate constantele si functille folosite sunt explicate cu comentarii.
+    Mentionez ca am tinut fiecare linie mai mica de 80 de caractere, si am
+incercat sa tin dimensiunea functiilor cat mai mica posibil.
+
+    Va multumesc pentru atentie si feedback!

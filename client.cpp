@@ -1,10 +1,10 @@
-#include <stdio.h>      /* printf, sprintf */
-#include <stdlib.h>     /* exit, atoi, malloc, free */
-#include <unistd.h>     /* read, write, close */
-#include <string.h>     /* memcpy, memset */
-#include <sys/socket.h> /* socket, connect */
-#include <netinet/in.h> /* struct sockaddr_in, struct sockaddr */
-#include <netdb.h>      /* struct hostent, gethostbyname */
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>  
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 #include <arpa/inet.h>
 #include "helpers.hpp"
 #include "requests.hpp"
@@ -12,10 +12,13 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <cctype>
+#include <cstring>
 
 using json = nlohmann::json;
 using namespace std;
 
+// Constante folosite pentru interactiunea cu serverul
 #define SERVER "34.241.4.235"
 #define PORT 8080
 #define REGISTER "/api/v1/tema/auth/register"
@@ -29,7 +32,11 @@ using namespace std;
 #define SETCOOKIE "Set-Cookie: "
 #define TOKEN "token"
 #define CONTENT_TYPE "Content-Type: "
+#define HEADER_TERMINATOR "\r\n\r\n"
+#define LINE_SEPARTOR "\r\n"
 
+
+// Enum pentru parsarea input-urilor posibile
 enum inputs {
     eRegister,
     eLogin,
@@ -43,12 +50,28 @@ enum inputs {
     eInvalidInput
 };
 
+// Verifica daca un sir de caractere reprezinta un numar
 bool isNumber(const string& str)
 {
     return str.find_first_not_of("0123456789") == str.npos;
 }
 
-uint32_t bad_result(string response)
+// Verifica daca un sir de caracter contine doar caractere printable
+bool checkPrintable(string str)
+{
+    for(auto l : str)
+    {
+        if (!isprint(l))
+        {
+            return false;
+        }
+        
+    }
+    return true;
+}
+
+// Verifica codul unui mesaj HTTP
+uint32_t check_code(string response)
 {
     string codeString = response.substr(9, 3);
     int code = stoi(codeString);
@@ -60,6 +83,7 @@ uint32_t bad_result(string response)
     return 0;
 }
 
+// Verifica daca utilizatorul este logat (exista un cookie)
 bool checkConnected(string cookie)
 {
     if(cookie == NIL)
@@ -70,6 +94,7 @@ bool checkConnected(string cookie)
     return true;
 }
 
+// Verifica daca utilizatorul este autentificat
 bool checkAuth(string token)
 {
     if(token == NIL)
@@ -79,6 +104,8 @@ bool checkAuth(string token)
     }
     return true;
 }
+
+// Extrage Content size dintr-un mesaj HTTP
 int get_content_size(char *response)
 {
     int content_size = 0;
@@ -88,12 +115,13 @@ int get_content_size(char *response)
         int line_begin = message.find(CONTENT_LENGTH) + strlen(CONTENT_LENGTH);
         string content_length = message.substr(line_begin, message.length());
         content_length = content_length.substr(0, content_length
-                                                    .find_first_of("\r\n"));
+                                                .find_first_of(LINE_SEPARTOR));
         content_size = stoi(content_length);
     }
     return content_size;
 }
 
+// Extrage Content type pentru un mesaj HTTP
 string get_content_type(char *response)
 {
     string content(NIL);
@@ -107,24 +135,26 @@ string get_content_type(char *response)
     return content;
 }
 
+// Obtine content-ul unui mesaj HTTP
 string get_content(char *response)
 {
     string message(response);
     int content_size = get_content_size(response);
-    if (content_size != 0 && message.find("\r\n\r\n") != message.npos)
+    if (content_size != 0 && message.find(HEADER_TERMINATOR) != message.npos)
     {
-        message = message.substr(message.find("\r\n\r\n") + 4);
+        message = message.substr(message.find(HEADER_TERMINATOR) + 4);
         return message;
     }
     return NIL;
 }
 
+// Obtine o valoare dintr-un content de tipul JSON al unui content HTTP
 string get_content_value(char *response, string valueInContent)
 {
     int content_size = get_content_size(response);
     string message(response);
     string content_type = get_content_type(response);
-    if (content_size != 0 && message.find("\r\n\r\n") != message.npos)
+    if (content_size != 0 && message.find(HEADER_TERMINATOR) != message.npos)
     {
         string content = get_content(response);
         if (json::accept(content) && content_type == JSON_PAYLOAD)
@@ -143,6 +173,7 @@ string get_content_value(char *response, string valueInContent)
     return NIL;
 }
 
+// Obtine un COOKIE dintr-un raspuns http de tipul connect.sid
 string get_cookie(char *response)
 {
     string message(response);
@@ -156,10 +187,9 @@ string get_cookie(char *response)
     return NIL;
 }
 
+// Afiseaza continutul unui mesaj HTTP in format JSON pretty
 void print_content_message(char *response)
-{
-   
-    
+{ 
     string content = get_content(response);
     if (!json::accept(content))
     {
@@ -170,49 +200,78 @@ void print_content_message(char *response)
     cout << array.dump(4) << endl;
 }
 
+// Trateaza cazurile de eroare pentru un raspuns HTTP
 int handle_response(char *response)
 {
     string response_string(response);
-    if (bad_result(response_string))
+    uint32_t error_code = check_code(response_string);
+    if (error_code == 429)
+    {
+        cout << "Server is having too many requests, try again later!\n";
+        return 0;
+    }
+    if (error_code)
     {
         string error = get_content_value(response, "error");
         if (error != NIL)
         {
             fprintf(stdout, "%s\n", error.c_str());
-            return 0;
+            
         }
-        
+        else
+        {
+            string content = get_content(response);
+            cout << "Error: " << error_code << endl;
+            cout << content;
+        }
+        return 0;
     }
-
+    
 
     return 1;
 }
 
+// Trimite o cerere de inregistrare de tipul HTTP
 void send_register(string cookie)
 {
+    // Verificam ca utilizatorul nu este deja logat
     if (cookie != NIL)
     {
         cout << "You need to logout first!\n";
         return;
     }
     
+    // Obtinem datele contului ce trebuie creeat
     char *message;
     char *response;
     string username, password;
     cout << "username=";
     cin >> username;
+    if (!checkPrintable(username))
+    {
+        cout << "Try again and enter a valid printable username!\n";
+        return;
+    }
     cout << "password=";
     cin >> password;
+    if (!checkPrintable(password))
+    {
+        cout << "Try again and enter a valid printable password!\n";
+        return;
+    }
+    
+    // Creem cererea HTTP si il trimitel
     json j;
     j["username"] = username;
     j["password"] = password;
-    message = compute_post_request(SERVER, REGISTER, JSON_PAYLOAD, j.dump(4).c_str(), 0, NULL, 0, NULL);
-    // cout << message;
+    message = compute_post_request(SERVER, REGISTER, JSON_PAYLOAD,
+                                    j.dump(4).c_str(), NULL, NULL);
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     response = receive_from_server(sockfd);
     close(sockfd);
 
+    // Verificam raspunsul
     if (!handle_response(response))
     {
         free(message);
@@ -220,47 +279,61 @@ void send_register(string cookie)
         return;
     }
     
-    
     cout << "OK - 200 - Utilizator înregistrat cu succes!\n";
     free(message);
     free(response);
 
 }
 
-// returns cookie
+// Trimite o cerere de logare de tipul HTTP
 string send_login(string checkAlreadyLoginCookie)
 {
+    // Verificam daca nu suntem deja logat
     if (checkAlreadyLoginCookie != NIL)
     {
         cout << "You need to logout first!\n";
         return checkAlreadyLoginCookie;
     }
     
+    // Obtinem datele utilizatorul
     char *message;
     char *response;
     string username, password;
     cout << "username=";
     cin >> username;
+    if (!checkPrintable(username))
+    {
+        cout << "Try again and enter a valid printable username!\n";
+        return NIL;
+    }
+    
     cout << "password=";
     cin >> password;
+    if (!checkPrintable(password))
+    {
+        cout << "Try again and enter a valid printable password!\n";
+        return NIL;
+    }
+
+    // Creem cererea HTTP si o trimitem
     json j;
     j["username"] = username;
     j["password"] = password;
-    message = compute_post_request(SERVER, LOGIN, JSON_PAYLOAD, j.dump(4).c_str(), 0, NULL, 0, NULL);
-    // cout << "Sending:\n" << message;
+    message = compute_post_request(SERVER, LOGIN, JSON_PAYLOAD,
+                                    j.dump(4).c_str(), NULL, NULL);
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     response = receive_from_server(sockfd);
+    close(sockfd);
 
-    string cookie = get_cookie(response);
-
+    // Verificam raspunsul HTTP
     if (!handle_response(response))
     {
         free(message);  
         free(response);
         return NIL;
     }
-
+    string cookie = get_cookie(response);
     cout << "200 - OK - Bun venit!\n";
 
     free(message);
@@ -269,27 +342,31 @@ string send_login(string checkAlreadyLoginCookie)
     return cookie;
 }
 
+// Intra in librarie de carti / Obtine token-ul de autentificare
 string enter_library(string cookie, string inputToken)
 {
+    // Verificam daca utilizator este conectat
     if (!checkConnected(cookie))
     {
         return NIL;
     }
+    // Verificam daca utilizator nu este deja autorizat
     if (inputToken != NIL)
     {
         cout << "You already entered the library!\n";
         return inputToken;
     }
     
-
+    // Trimitem mesajul HTTP;
     char *message;
     char *response;
-    message = compute_get_request(SERVER, ACCESS, NULL, cookie.c_str(), 1, NULL, NULL);
+    message = compute_get_request(SERVER, ACCESS, cookie.c_str(), NULL, NULL);
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
-    
     response = receive_from_server(sockfd);
+    close(sockfd);
 
+    // Verifica raspunsul
     if (!handle_response(response))
     {
         free(message);
@@ -298,31 +375,32 @@ string enter_library(string cookie, string inputToken)
     }
     
     string token = get_content_value(response, TOKEN);
-    
     cout << "OK - 200 - Librarie accessata cu succes!\n";
     free(message);
     free(response);
     return token;
 }
 
+// Obtine lista de carti 
 void get_books(string cookie, string token)
-{
-    if (!checkConnected(cookie))
+{   
+    // Verificam daca utilizatorul este conectat si autentificat
+    if (!checkConnected(cookie) || !checkAuth(token))
     {
         return;
     }
-    if (!checkAuth(token))
-    {
-        return;
-    }
+
+
+    // Trimite cererea HTTP
     char *message;
     char *response;
-    message = compute_get_request(SERVER, BOOKS, NULL, NULL, 1, token.c_str(), NULL);
+    message = compute_get_request(SERVER, BOOKS, NULL, token.c_str(), NULL);
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
-    
     response = receive_from_server(sockfd);
+    close(sockfd);
 
+    // Verifica raspunsul
     if (!handle_response(response))
     {
         free(message);
@@ -336,28 +414,49 @@ void get_books(string cookie, string token)
     free(response);
 }
 
+// Citeste datele necesare unei carti si intoarce obiectul JSON
 json create_book()
 {
     json j;
     string input;
     cout << "title=";
     cin >> input;
+    if (!checkPrintable(input))
+    {
+        cout << "Try again and enter a valid printable title!\n";
+        return NIL;
+    }
     j["title"] = input;
     cout << "author=";
     cin >> input;
+    if (!checkPrintable(input))
+    {
+        cout << "Try again and enter a valid printable author!\n";
+        return NIL;
+    }
     j["author"] = input;
     cout << "genre=";
     cin >> input;
+    if (!checkPrintable(input))
+    {
+        cout << "Try again and enter a valid printable genre!\n";
+        return NIL;
+    }
     j["genre"] = input;
     cout << "publisher=";
     cin >> input;
+    if (!checkPrintable(input))
+    {
+        cout << "Try again and enter a valid printable publisher!\n";
+        return NIL;
+    }
     j["publisher"] = input;
     cout << "page_count=";
     cin >> input;
 
     if (!isNumber(input))
     {
-        fprintf(stdout, "page_count must be a number! Try again!\n");
+        cout << "page_count must be a number! Try again!\n";
         return NIL;
     }
     
@@ -366,16 +465,16 @@ json create_book()
     return j;
 }
 
+// Trimite o cerere de adaugare a unei carti
 void add_book(string cookie, string token)
 {
-    if (!checkConnected(cookie))
+    // Verificam daca utilizatorul este conectat si autentificat
+    if (!checkConnected(cookie) || !checkAuth(token))
     {
         return;
     }
-    if (!checkAuth(token))
-    {
-        return;
-    }
+
+    // Trimitem cererea HTTP
     char *message;
     char *response;
     json book = create_book();
@@ -383,14 +482,14 @@ void add_book(string cookie, string token)
     {
         return;
     }
-    
     message =  compute_post_request(SERVER, BOOKS, JSON_PAYLOAD,
-                            book.dump(4).c_str(), 0, NULL, 0, token.c_str());
+                            book.dump(4).c_str(), NULL, token.c_str());
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     response = receive_from_server(sockfd);
-    cout << response << endl;
-
+    close(sockfd);
+    
+    // Verificam raspunsul
     if (!handle_response(response))
     {
         free(message);
@@ -398,24 +497,22 @@ void add_book(string cookie, string token)
         return;
     }
 
-    // print_content_message(response);
     cout << "OK - 200 - Cartea a fost adaugata!\n";
 
     free(message);
     free(response);
 }
 
+// Obtine o carte 
 void get_book(string cookie, string token)
 {
-    if (!checkConnected(cookie))
-    {
-        return;
-    }
-    if (!checkAuth(token))
+    // Verificam daca utilizatorul este conectat si autentificat
+    if (!checkConnected(cookie) || !checkAuth(token))
     {
         return;
     }
 
+    // Trimitem cererea HTTP
     char *message;
     char *response;
     string bookId;
@@ -426,19 +523,19 @@ void get_book(string cookie, string token)
         cout << "Id must be a number! Try again!\n";
         return;
     }
-    
-    message = compute_get_request(SERVER, BOOKS, NULL, NULL, 1, token.c_str(), bookId.c_str());
-    // cout << message;
+    message = compute_get_request(SERVER, BOOKS, NULL,
+                                    token.c_str(), bookId.c_str());
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
-    // cout << message << endl;
     response = receive_from_server(sockfd);
-    // cout << response << endl;
+    close(sockfd);
+
+    // Verificam raspunsul
     if (!handle_response(response))
     {
         free(message);
         free(response);
-        cout << "Enter a valid ID!\n";
+        cout << "Enter a valid ID! Try again!\n";
         return;
     }
     print_content_message(response);
@@ -447,16 +544,16 @@ void get_book(string cookie, string token)
     free(response);
 }
 
+// Sterge o carte
 void delete_book(string cookie, string token)
 {
-    if (!checkConnected(cookie))
+    // Verificam daca utilizatorul este conectat si autentificat
+    if (!checkConnected(cookie) || !checkAuth(token))
     {
         return;
     }
-    if (!checkAuth(token))
-    {
-        return;
-    }
+
+    // Trimitem cererea HTTP
     char *message;
     char *response;
     string bookId;
@@ -467,11 +564,14 @@ void delete_book(string cookie, string token)
         cout << "Id must be a number! Try again!\n";
         return;
     }
-    message = compute_delete_request(SERVER, BOOKS, NULL, NULL, 1, token.c_str(), bookId.c_str());
-    // cout << message;
+    message = compute_delete_request(SERVER, BOOKS, NULL,
+                                        token.c_str(), bookId.c_str());
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     response = receive_from_server(sockfd);
+    close(sockfd);
+
+    // Verificam raspunsul
     if (!handle_response(response))
     {    
         free(message);
@@ -479,39 +579,45 @@ void delete_book(string cookie, string token)
         cout << "Enter a valid ID!\n";
         return;
     }
-    print_content_message(response);
+    cout << "OK - 200 - Cartea a fost stearsa!\n";
     
     free(message);
     free(response);
 
 }
 
+// Delogheaza un utilizator
 void logout(string cookie)
 {
+    // Verifica daca utilizatorul este conectat
     if (!checkConnected(cookie))
     {
         return;
     }
 
+    // Trimite cererea HTTp
     char *message;
     char *response;
-    message = compute_get_request(SERVER, LOGOUT, NULL, cookie.c_str(), 1, NULL, NULL);
-    // cout << message;
+    message = compute_get_request(SERVER, LOGOUT, cookie.c_str(), NULL, NULL);
     int sockfd = open_connection(SERVER, PORT, AF_INET, SOCK_STREAM, 0);
     send_to_server(sockfd, message);
     response = receive_from_server(sockfd);
+    close(sockfd);
+
+    // Verifica raspunsul
     if (!handle_response(response))
     {
         free(message);
         free(response);
         return;
     }
-    cout << "OK - 200 - Logout terminat!\n";
+    cout << "OK - 200 - Logout executat cu succes!\n";
     free(message);
     free(response);
 }
 
-inputs get_value(const string input)
+// Pentru un sir de caractere de tipul input, intoarce intrarea corecta in enum
+inputs get_input_value(const string input)
 {
     if (input == "register") return eRegister;
     if (input == "login") return eLogin;
@@ -532,14 +638,15 @@ int main(int argc, char *argv[])
     string cookie(NIL);
     string token(NIL);
 
+    // Citim datele la pana la introducerea comenzii exit
     while (1)
     {   
         cin >> command;
-        if(get_value(command) == eExit) 
+        if(get_input_value(command) == eExit) 
         {
             break;
         }
-        switch (get_value(command))
+        switch (get_input_value(command))
         {
             case eRegister:
                 send_register(cookie);
@@ -568,13 +675,11 @@ int main(int argc, char *argv[])
                 token = NIL;
                 break;
             case eInvalidInput:
-                cout << "Not a valid input\n";
+                cout << "Enter a valid command!\n";
                 break;   
             default:
                 break;
         }
-    
-        
     }
     
     return 0;

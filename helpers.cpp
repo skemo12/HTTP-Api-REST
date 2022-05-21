@@ -26,7 +26,8 @@ void compute_message(char *message, const char *line)
     strcat(message, "\r\n");
 }
 
-int open_connection(const char *host_ip, int portno, int ip_type, int socket_type, int flag)
+int open_connection(const char *host_ip, int portno, int ip_type,
+                    int socket_type, int flag)
 {
     struct sockaddr_in serv_addr;
     int sockfd = socket(ip_type, socket_type, flag);
@@ -97,7 +98,8 @@ char *receive_from_server(int sockfd)
         if (header_end >= 0) {
             header_end += HEADER_TERMINATOR_SIZE;
             
-            int content_length_start = buffer_find_insensitive(&buffer, CONTENT_LENGTH, CONTENT_LENGTH_SIZE);
+            int content_length_start = buffer_find_insensitive(&buffer,
+            CONTENT_LENGTH, CONTENT_LENGTH_SIZE);
             
             if (content_length_start < 0) {
                 continue;           
